@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Pemesanan Makanan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#f97316', primaryHover: '#ea580c' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <nav class="bg-white shadow-sm fixed w-full z-10 top-0">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold text-primary">Ngemil<span class="text-gray-800">Yuk!</span></div>
+            <button onclick="showCart()" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                🛒 <span id="cart-count" class="text-sm font-bold ml-1">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <header class="pt-24 pb-8 px-4 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Lapar? Pesan Sekarang.</h1>
+        <p class="text-gray-500 mb-6">Pilih menu favoritmu, kami antar dengan cepat.</p>
+        <div class="max-w-md mx-auto flex gap-2">
+            <input type="text" id="searchInput" onkeyup="filterMenu()" placeholder="Cari makanan atau minuman..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 mb-8 flex gap-3 overflow-x-auto pb-2">
+        <button onclick="setCategory('semua')" class="filter-btn active bg-primary text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Semua</button>
+        <button onclick="setCategory('makanan')" class="filter-btn bg-white border border-gray-200 px-5 py-2 rounded-full text-sm font-semibold hover:border-primary whitespace-nowrap">Makanan</button>
+        <button onclick="setCategory('minuman')" class="filter-btn bg-white border border-gray-200 px-5 py-2 rounded-full text-sm font-semibold hover:border-primary whitespace-nowrap">Minuman</button>
+        <button onclick="setCategory('cemilan')" class="filter-btn bg-white border border-gray-200 px-5 py-2 rounded-full text-sm font-semibold hover:border-primary whitespace-nowrap">Cemilan</button>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 pb-20">
+        <div id="menuContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            </div>
+        <div id="noResult" class="hidden text-center text-gray-500 mt-10">Menu tidak ditemukan.</div>
+    </main>
+
+    <script>
+        const menus = [
+            { id: 1, name: "Bakso Sapi Frozen", category: "makanan", price: 25000, img: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=400&q=80", desc: "Lengkap dengan kuah kaldu." },
+            { id: 2, name: "Mie Instan Spesial", category: "makanan", price: 15000, img: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=400&q=80", desc: "Topping sayur & telur." },
+            { id: 3, name: "Sate Taichan Pedas", category: "makanan", price: 30000, img: "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=400&q=80", desc: "Daging ayam pilihan." },
+            { id: 4, name: "Nasi Goreng Gila", category: "makanan", price: 22000, img: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=400&q=80", desc: "Porsi besar ekstra kerupuk." },
+            { id: 5, name: "Ayam Geprek Keju", category: "makanan", price: 20000, img: "https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=400&q=80", desc: "Level pedas 1-5." },
+            { id: 6, name: "Es Teh Manis", category: "minuman", price: 5000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=400&q=80", desc: "Segar dan dingin." },
+            { id: 7, name: "Kopi Susu Aren", category: "minuman", price: 18000, img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80", desc: "Biji kopi pilihan." },
+            { id: 8, name: "Jus Alpukat", category: "minuman", price: 15000, img: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400&q=80", desc: "Kental manis coklat." },
+            { id: 9, name: "Matcha Latte", category: "minuman", price: 20000, img: "https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=400&q=80", desc: "Premium matcha Jepang." },
+            { id: 10, name: "Kentang Goreng", category: "cemilan", price: 12000, img: "https://images.unsplash.com/photo-1541592102-42c2e0e5c942?auto=format&fit=crop&w=400&q=80", desc: "Saus sambal & mayo." },
+            { id: 11, name: "Pisang Nugget", category: "cemilan", price: 15000, img: "https://images.unsplash.com/photo-1621852004158-97e3a38b69db?auto=format&fit=crop&w=400&q=80", desc: "Topping coklat keju." },
+            { id: 12, name: "Dimsum Mentai", category: "cemilan", price: 25000, img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400&q=80", desc: "Isi 4 porsi besar." },
+            { id: 13, name: "Burger Sapi", category: "makanan", price: 35000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80", desc: "Patty tebal & keju lumer." },
+            { id: 14, name: "Salad Buah", category: "cemilan", price: 20000, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80", desc: "Yogurt & keju parut." },
+            { id: 15, name: "Rendang Daging", category: "makanan", price: 28000, img: "https://images.unsplash.com/photo-1534939561149-894eb1192e21?auto=format&fit=crop&w=400&q=80", desc: "Bumbu khas Padang asli." }
+        ];
+
+        let currentCategory = 'semua';
+        let cart = []; // Ubah jadi array untuk simpan data asli
+
+        function renderMenu(items) {
+            const container = document.getElementById('menuContainer');
+            const noResult = document.getElementById('noResult');
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                noResult.classList.remove('hidden');
+            } else {
+                noResult.classList.add('hidden');
+                items.forEach(menu => {
+                    // Lempar menu.id ke addToCart
+                    const card = `
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
+                            <img src="${menu.img}" alt="${menu.name}" class="w-full h-48 object-cover">
+                            <div class="p-5">
+                                <h3 class="text-lg font-bold mb-1">${menu.name}</h3>
+                                <p class="text-sm text-gray-500 mb-4">${menu.desc}</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xl font-extrabold text-primary">Rp ${menu.price.toLocaleString('id-ID')}</span>
+                                    <button onclick="addToCart(${menu.id}, this)" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition">Tambah</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            }
+        }
+
+        function filterMenu() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = menus.filter(menu => {
+                const matchCategory = currentCategory === 'semua' || menu.category === currentCategory;
+                const matchSearch = menu.name.toLowerCase().includes(searchText) || menu.desc.toLowerCase().includes(searchText);
+                return matchCategory && matchSearch;
+            });
+            renderMenu(filtered);
+        }
+
+        function setCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn bg-white border border-gray-200 px-5 py-2 rounded-full text-sm font-semibold hover:border-primary whitespace-nowrap";
+            });
+            event.target.className = "filter-btn active bg-primary text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap";
+            filterMenu();
+        }
+
+        function addToCart(id, button) {
+            // Cari data menu
+            const item = menus.find(m => m.id === id);
+            cart.push(item);
+            document.getElementById('cart-count').innerText = cart.length;
+            
+            // Efek tombol
+            const originalText = button.innerText;
+            button.innerText = 'Masuk ✔';
+            button.classList.replace('bg-gray-900', 'bg-green-500');
+            button.classList.replace('hover:bg-gray-800', 'hover:bg-green-600');
+            
+            setTimeout(() => {
+                button.innerText = originalText;
+                button.classList.replace('bg-green-500', 'bg-gray-900');
+                button.classList.replace('hover:bg-green-600', 'hover:bg-gray-800');
+            }, 1000);
+
+            // Munculkan Toast SweetAlert
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: `${item.name} ditambahkan!`,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        function showCart() {
+            if (cart.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Keranjang Kosong',
+                    text: 'Yuk pilih menu dulu!'
+                });
+                return;
+            }
+
+            // Hitung total dan list menu
+            let total = 0;
+            let htmlList = '<div class="text-left text-sm">';
+            cart.forEach((item, index) => {
+                total += item.price;
+                htmlList += `<div class="flex justify-between border-b py-2">
+                                <span>${index + 1}. ${item.name}</span>
+                                <span class="font-bold">Rp ${item.price.toLocaleString('id-ID')}</span>
+                             </div>`;
+            });
+            htmlList += `<div class="flex justify-between mt-4 text-lg font-bold text-primary">
+                            <span>Total Pembayaran:</span>
+                            <span>Rp ${total.toLocaleString('id-ID')}</span>
+                         </div></div>`;
+
+            // Tampilkan Modal Keranjang
+            Swal.fire({
+                title: 'Isi Keranjang',
+                html: htmlList,
+                confirmButtonText: 'Checkout Sekarang',
+                confirmButtonColor: '#f97316',
+                showCancelButton: true,
+                cancelButtonText: 'Tutup'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Pesanan Diproses!', 'Silakan tunggu makananmu.', 'success');
+                    // Reset Keranjang
+                    cart = [];
+                    document.getElementById('cart-count').innerText = 0;
+                }
+            });
+        }
+
+        // Render awal
+        renderMenu(menus);
+    </script>
+</body>
+</html>
